@@ -2,8 +2,8 @@ interface Value {
     val(): String;
   }
   
-  interface IsVisible {
-    is_visible();
+  interface Visibility {
+    visibility();
   }
   
   class StringValue implements Value {
@@ -17,18 +17,18 @@ interface Value {
     }
   }
   
-  class LiteralVisibilty implements IsVisible {
+  class LiteralVisibilty implements Visibility {
     i: boolean;
     constructor(i: boolean) {
       this.i = i;
     }
   
-    is_visible() {
+    visibility() {
       return this.i;
     }
   }
   
-  class Input implements Value, IsVisible {
+  class Input implements Value, Visibility {
     id: String = "";
   
     constructor(id: String) {
@@ -51,7 +51,7 @@ interface Value {
       return this.as_jquery() + ".val('" + v + "')";
     }
   
-    is_visible() {
+    visibility() {
       return this.as_jquery() + '.is(":visible")';
     }
   
@@ -106,16 +106,16 @@ interface Value {
   
   class VisibleCondition implements Condition {
     input: Input;
-    required_visibility: IsVisible;
+    required_visibility: Visibility;
   
-    constructor(input: Input, required_visibility: IsVisible) {
+    constructor(input: Input, required_visibility: Visibility) {
       this.input = input;
       this.required_visibility = required_visibility;
     }
   
     validation() {
       return (
-        this.input.is_visible() + "==" + this.required_visibility.is_visible()
+        this.input.visibility() + "==" + this.required_visibility.visibility()
       );
     }
   }
@@ -144,6 +144,21 @@ interface Value {
     }
   }
   
+  class SetVisibilityAction implements Action {
+    input: Input;
+    visibility_to_set: Visibility;
+  
+    constructor(input: Input, value_to_set: String) {
+      this.input = input;
+      this.value_to_set = value_to_set;
+    }
+  
+    get_action() {
+      return this.input.set_val(this.value_to_set);
+    }
+  }
+
+
   class Rule {
     trigger: Trigger;
     condition: Condition;
