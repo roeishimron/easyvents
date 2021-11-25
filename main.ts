@@ -158,10 +158,6 @@ var rule = new Rule(
 
 console.log(rule.to_jquery());
 
-function flow() {
-  choose_input("trigger", trigger_choose_handler);
-}
-
 var trigger: Trigger;
 var condition: Condition;
 var action: Action;
@@ -169,29 +165,8 @@ var action: Action;
 var is_choosing = false;
 var handler: Function;
 
-function choose_input(reason: String, callback: (Input) => void) {
-  alert("choose_input an input for " + reason);
-  is_choosing = true;
-  console.log("setting is choise to true");
-  handler = callback;
-}
-
-function call_with_chosen_value(callback: (Value) => void) {
-  let type_to_value = {
-    input: function (clbck) {
-      choose_input("getting value from that input", clbck);
-    },
-    literal: function (clbck) {
-      clbck(new StringValue(prompt("enter value")));
-    },
-  };
-
-  let choise = prompt(
-    "choose_input one of: " + Object.keys(type_to_value).join(", "),
-    Object.keys(type_to_value)[0]
-  );
-
-  type_to_value[choise](callback);
+function flow() {
+  choose_input("trigger", trigger_choose_handler);
 }
 
 function trigger_choose_handler(input: Input) {
@@ -215,10 +190,6 @@ function trigger_choose_handler(input: Input) {
   }
 }
 
-// function condition_flow(){
-//   let
-// }
-
 function value_condition_choose_handler(input: Input) {
   call_with_chosen_value(function (v: Value) {
     condition = new ValueCondition(input, v.val());
@@ -226,10 +197,35 @@ function value_condition_choose_handler(input: Input) {
   });
 }
 
-function action_choose_handler(input: Input) {
-  action = new SetValueAction(input, prompt("enter the new val"));
+function choose_input(reason: String, callback: (Input) => void) {
+  alert("choose_input an input for " + reason);
+  is_choosing = true;
+  console.log("setting is choise to true");
+  handler = callback;
+}
 
-  alert("Here you go\n" + new Rule(trigger, condition, action).to_jquery());
+function call_with_chosen_value(callback: (Value) => void) {
+  let type_to_value = {
+    input: function (clbck) {
+      choose_input("getting value from that input", clbck);
+    },
+    literal: function (clbck) {
+      clbck(new StringValue(prompt("enter value")));
+    },
+  };
+
+  function action_choose_handler(input: Input) {
+    action = new SetValueAction(input, prompt("enter the new val"));
+
+    alert("Here you go\n" + new Rule(trigger, condition, action).to_jquery());
+  }
+
+  let choise = prompt(
+    "choose_input one of: " + Object.keys(type_to_value).join(", "),
+    Object.keys(type_to_value)[0]
+  );
+
+  type_to_value[choise](callback);
 }
 
 $(function () {
