@@ -14,7 +14,7 @@ function trigger_choose_handler(input: Input) {
       condition_handler();
     } else {
       condition = new NoCondition();
-      choose_input("action", action_handler);
+      action_handler();
     }
   }
   

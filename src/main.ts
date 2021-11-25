@@ -10,6 +10,9 @@ function flow() {
   choose_input("trigger", trigger_choose_handler);
 }
 
+function finish() {
+  alert("Here you go\n" + new Rule(trigger, condition, action).to_jquery());
+}
 
 $(function () {
   $(":input").each(function (i, input) {

@@ -20,7 +20,7 @@ function choose_input(reason: String, callback: (Input) => void) {
   
     prompt_dict("Choose value type.", type_to_value)(callback);
   }
-  
+
   function prompt_dict(message, dict, default_index = 0) {
     let chosen = "__NO_SUCH_vALUE_EVER__";
   
@@ -35,3 +35,23 @@ function choose_input(reason: String, callback: (Input) => void) {
   
     return dict[chosen];
   }
+
+
+function call_with_chosen_visibility(callback: (Visibility) => void) {
+  let options = {
+    visible: new LiteralVisibilty(true),
+    invisible: new LiteralVisibilty(false),
+    "like other": null,
+  };
+
+  let chosen = prompt_dict("What visibility to compare to?", options);
+
+  if (chosen != null){
+    callback(chosen)
+  }
+  else{
+    choose_input("other input to compare visability with", (i: Input) => {
+      callback(i);
+    });
+  }
+}
