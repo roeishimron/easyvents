@@ -173,8 +173,6 @@ var rule = new Rule(
   new SetValueAction(new Input("result_input"), "newval")
 );
 
-console.log(rule.to_jquery());
-
 var trigger: Trigger;
 var condition: Condition;
 var action: Action;
@@ -183,6 +181,7 @@ var is_choosing = false;
 var handler: Function;
 
 function flow() {
+  console.log("#we started");
   choose_input("trigger", trigger_choose_handler);
 }
 
@@ -192,14 +191,29 @@ function trigger_choose_handler(input: Input) {
     change: TriggerType.change,
   };
 
-  trigger = new Trigger(input, prompt_dict(name_to_type));
+  trigger = new Trigger(
+    input,
+    prompt_dict("What kind of trigger?", name_to_type)
+  );
 
-  if (confirm("would you like to enter a val condition?")) {
-    choose_input("value condition", value_condition_handler);
+  if (confirm("would you like to enter a condition?")) {
+    condition_handler();
   } else {
     condition = new NoCondition();
-    choose_input("action", action_choose_handler);
+    choose_input("action", action_handler);
   }
+}
+
+function condition_handler() {
+  let options = {
+    value: value_condition_handler,
+    visibility: visibilty_condition_handler,
+  };
+
+  let handler : (Input) => void = prompt_dict("Choose the type of condition", options);
+  console.log(handler);
+
+  choose_input("condition", handler);
 }
 
 function visibilty_condition_handler(input: Input) {
@@ -209,14 +223,14 @@ function visibilty_condition_handler(input: Input) {
     "like other": null,
   };
 
-  let chosen = prompt_dict(options);
+  let chosen = prompt_dict("What visibility to compare to?", options);
   if (chosen != null) {
     condition = new VisibleCondition(input, chosen);
-    choose_input("action", action_choose_handler);
+    choose_input("action", action_handler);
   } else {
     choose_input("other's visability", (i: Input) => {
       condition = new VisibleCondition(input, i);
-      choose_input("action", action_choose_handler);
+      choose_input("action", action_handler);
     });
   }
 }
@@ -224,48 +238,51 @@ function visibilty_condition_handler(input: Input) {
 function value_condition_handler(input: Input) {
   call_with_chosen_value(function (v: Value) {
     condition = new ValueCondition(input, v.val());
-    choose_input("action", action_choose_handler);
+    choose_input("action", action_handler);
   });
 }
 
-function action_choose_handler(input: Input) {
+function action_handler(input: Input) {
   action = new SetValueAction(input, prompt("enter the new val"));
 
   alert("Here you go\n" + new Rule(trigger, condition, action).to_jquery());
 }
 
 function choose_input(reason: String, callback: (Input) => void) {
-  alert("choose_input an input for " + reason);
+  alert("choose an input for " + reason);
   is_choosing = true;
-  console.log("setting is choise to true");
-  handler = callback;
+  handler = (i: Input) => {
+    console.log("asked to choose an input for " + reason, " chosen " + i.id);
+    callback(i);
+  };
 }
 
 function call_with_chosen_value(callback: (Value) => void) {
   let type_to_value = {
-    input: function (clbck) {
-      choose_input("getting value from that input", clbck);
-    },
-    literal: function (clbck) {
+    literal: function (clbck: (Input) => void) {
       clbck(new StringValue(prompt("enter value")));
+    },
+    input: function (clbck: (Input) => void) {
+      choose_input("getting value from that input", clbck);
     },
   };
 
-  let choise = prompt(
-    "choose_input one of: " + Object.keys(type_to_value).join(", "),
-    Object.keys(type_to_value)[0]
-  );
-
-  prompt_dict(type_to_value)(callback);
+  prompt_dict("Choose value type.", type_to_value)(callback);
 }
 
-function prompt_dict(dict, default_index = 0) {
-  return dict[
-    prompt(
-      "Choose trigger type. Options are:" + Object.keys(dict).join(", "),
+function prompt_dict(message, dict, default_index = 0) {
+  let chosen = "__NO_SUCH_vALUE_EVER__";
+
+  while (!Object.keys(dict).includes(chosen)){
+    chosen = prompt(
+      message + " options are: " + Object.keys(dict).join(", "),
       Object.keys(dict)[default_index]
-    )
-  ];
+    );
+  }
+
+  console.log("asked for " + message, ", chosen " + chosen);
+
+  return dict[chosen];
 }
 
 $(function () {
@@ -274,14 +291,12 @@ $(function () {
       "click",
       function (event) {
         if (!is_choosing) {
-          console.log("returning, no choose_input");
           return true;
         }
         $(this).blur();
         event.stopImmediatePropagation();
         event.preventDefault();
         is_choosing = false;
-        console.log("setting is choise to false");
 
         handler(new Input($(this).attr("id")));
       },
