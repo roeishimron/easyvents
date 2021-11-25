@@ -2,6 +2,10 @@ interface Value {
   val(): String;
 }
 
+interface IsVisible {
+  is_visible();
+}
+
 class StringValue implements Value {
   s: String;
   constructor(s: String) {
@@ -13,7 +17,18 @@ class StringValue implements Value {
   }
 }
 
-class Input implements Value {
+class LiteralVisibilty implements IsVisible {
+  i: boolean;
+  constructor(i: boolean) {
+    this.i = i;
+  }
+
+  is_visible() {
+    return this.i;
+  }
+}
+
+class Input implements Value, IsVisible {
   id: String = "";
 
   constructor(id: String) {
@@ -91,15 +106,17 @@ class ValueCondition implements Condition {
 
 class VisibleCondition implements Condition {
   input: Input;
-  required_visibility: boolean;
+  required_visibility: IsVisible;
 
-  constructor(input: Input, required_visibility: boolean) {
+  constructor(input: Input, required_visibility: IsVisible) {
     this.input = input;
     this.required_visibility = required_visibility;
   }
 
   validation() {
-    return this.input.is_visible() + "==" + this.required_visibility;
+    return (
+      this.input.is_visible() + "==" + this.required_visibility.is_visible()
+    );
   }
 }
 
@@ -175,26 +192,46 @@ function trigger_choose_handler(input: Input) {
     change: TriggerType.change,
   };
 
-  let wanted_type = prompt(
-    "Choose trigger type. Options are:" + Object.keys(name_to_type).join(", "),
-    Object.keys(name_to_type)[0]
-  );
-
-  trigger = new Trigger(input, name_to_type[wanted_type]);
+  trigger = new Trigger(input, prompt_dict(name_to_type));
 
   if (confirm("would you like to enter a val condition?")) {
-    choose_input("value condition", value_condition_choose_handler);
+    choose_input("value condition", value_condition_handler);
   } else {
     condition = new NoCondition();
     choose_input("action", action_choose_handler);
   }
 }
 
-function value_condition_choose_handler(input: Input) {
+function visibilty_condition_handler(input: Input) {
+  let options = {
+    visible: new LiteralVisibilty(true),
+    invisible: new LiteralVisibilty(false),
+    "like other": null,
+  };
+
+  let chosen = prompt_dict(options);
+  if (chosen != null) {
+    condition = new VisibleCondition(input, chosen);
+    choose_input("action", action_choose_handler);
+  } else {
+    choose_input("other's visability", (i: Input) => {
+      condition = new VisibleCondition(input, i);
+      choose_input("action", action_choose_handler);
+    });
+  }
+}
+
+function value_condition_handler(input: Input) {
   call_with_chosen_value(function (v: Value) {
     condition = new ValueCondition(input, v.val());
     choose_input("action", action_choose_handler);
   });
+}
+
+function action_choose_handler(input: Input) {
+  action = new SetValueAction(input, prompt("enter the new val"));
+
+  alert("Here you go\n" + new Rule(trigger, condition, action).to_jquery());
 }
 
 function choose_input(reason: String, callback: (Input) => void) {
@@ -214,18 +251,21 @@ function call_with_chosen_value(callback: (Value) => void) {
     },
   };
 
-  function action_choose_handler(input: Input) {
-    action = new SetValueAction(input, prompt("enter the new val"));
-
-    alert("Here you go\n" + new Rule(trigger, condition, action).to_jquery());
-  }
-
   let choise = prompt(
     "choose_input one of: " + Object.keys(type_to_value).join(", "),
     Object.keys(type_to_value)[0]
   );
 
-  type_to_value[choise](callback);
+  prompt_dict(type_to_value)(callback);
+}
+
+function prompt_dict(dict, default_index = 0) {
+  return dict[
+    prompt(
+      "Choose trigger type. Options are:" + Object.keys(dict).join(", "),
+      Object.keys(dict)[default_index]
+    )
+  ];
 }
 
 $(function () {
