@@ -28,27 +28,24 @@ class LiteralVisibilty implements Visibility {
   }
 }
 
-class Input implements Value, Visibility {
+class WebElement implements Visibility {
   id: String = "";
+  is_raw: boolean;
 
-  constructor(id: String) {
+  constructor(id: String, is_raw: boolean = true) {
     this.id = id;
+    this.is_raw = is_raw;
   }
 
   closest(type: String) {
-    return this.as_jquery() + "closest(" + type + ")";
+    return new WebElement(this.as_jquery() + ".closest('" + type + "')", false);
   }
 
   as_jquery() {
-    return "$('#" + this.id + "')";
-  }
-
-  val() {
-    return this.as_jquery() + ".val()";
-  }
-
-  set_val(v: Value) {
-    return this.as_jquery() + ".val('" + v.val() + "')";
+    if (this.is_raw) {
+      return "$('#" + this.id + "')";
+    }
+    return this.id;
   }
 
   visibility() {
@@ -63,9 +60,19 @@ class Input implements Value, Visibility {
       "], 'important')})"
     );
   }
+}
 
-  from_user_hover() {
-    this.id = document.querySelectorAll(":hover")[0].id;
+class Input extends WebElement implements Value {
+  constructor(id: String) {
+    super(id);
+  }
+
+  val() {
+    return this.as_jquery() + ".val()";
+  }
+
+  set_val(v: Value) {
+    return this.as_jquery() + ".val(" + v.val() + ")";
   }
 }
 
@@ -109,37 +116,32 @@ class ConnectedCondition implements Condition {
   connector: Connector;
   lhs: Condition;
 
-  constructor(
-    lhs: Condition,
-    conn: Connector = Connector.none
-  ) {
+  constructor(lhs: Condition, conn: Connector = Connector.none) {
     this.lhs = lhs;
     this.connector = conn;
   }
 
   validation(): String {
-    return (
-      this.lhs.validation() + this.connector 
-    );
+    return this.lhs.validation() + this.connector;
   }
 }
 
-class ConnectedConditions implements Condition{
- current_conditions : Array<ConnectedCondition> = new Array<ConnectedCondition>();
+class ConnectedConditions implements Condition {
+  current_conditions: Array<ConnectedCondition> =
+    new Array<ConnectedCondition>();
 
- validation(): String{
-   var res = "";
-   this.current_conditions.forEach(c => {
-     res += c.validation();
-   });
+  validation(): String {
+    var res = "";
+    this.current_conditions.forEach((c) => {
+      res += c.validation();
+    });
 
-   return res;
- }
+    return res;
+  }
 
- add_condition(c: ConnectedCondition){
-   this.current_conditions.push(c);
- }
-
+  add_condition(c: ConnectedCondition) {
+    this.current_conditions.push(c);
+  }
 }
 
 class ValueCondition implements Condition {
@@ -157,18 +159,18 @@ class ValueCondition implements Condition {
 }
 
 class VisibleCondition implements Condition {
-  input: Visibility;
+  element: Visibility;
   required_visibility: Visibility;
 
-  constructor(input: Visibility, required_visibility: Visibility) {
-    this.input = input;
+  constructor(element: Visibility, required_visibility: Visibility) {
+    this.element = element;
     this.required_visibility = required_visibility;
   }
 
   validation() {
     return (
       "(" +
-      this.input.visibility() +
+      this.element.visibility() +
       "==" +
       this.required_visibility.visibility() +
       ")"
@@ -201,16 +203,32 @@ class SetValueAction implements Action {
 }
 
 class SetVisibilityAction implements Action {
-  input: Input;
+  element: WebElement;
   visibility_to_set: Visibility;
 
-  constructor(input: Input, visibility_to_set: Visibility) {
-    this.input = input;
+  constructor(element: WebElement, visibility_to_set: Visibility) {
+    this.element = element;
     this.visibility_to_set = visibility_to_set;
   }
 
   get_action() {
-    return this.input.set_visibility(this.visibility_to_set);
+    return this.element.set_visibility(this.visibility_to_set);
+  }
+}
+
+class Actions implements Action{
+  actions: Array<Action> = new Array<Action>();
+
+  add_action(a: Action){
+    this.actions.push(a);
+  }
+
+  get_action(){
+    var res = "";
+    this.actions.forEach(a => {
+      res += a.get_action() + ";\n";
+    });
+    return res;
   }
 }
 

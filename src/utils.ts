@@ -7,6 +7,19 @@ function choose_input(reason: String, callback: (Input) => void) {
   };
 }
 
+function get_element(input: Input, callback: (WebElement) => void) {
+  let options = {
+    tr: "tr",
+    td: "td",
+  };
+
+  callback(
+    input.closest(
+      prompt_dict("We'll choose the closest instance of your choise.", options)
+    )
+  );
+}
+
 function call_with_chosen_value(callback: (Value) => void) {
   let type_to_value = {
     literal: function (clbck: (Input) => void) {
