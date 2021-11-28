@@ -99,32 +99,64 @@ interface Condition {
   validation(): String;
 }
 
-class ValueCondition implements Condition {
-  input: Input;
-  required_value: String;
+enum Connector {
+  and = "&&",
+  or = "||",
+  none = "",
+}
 
-  constructor(input: Input, required_value: String) {
+class ConnectedCondition implements Condition {
+  connector: Connector;
+  lhs: Condition;
+  rhs: Condition;
+
+  constructor(
+    lhs: Condition,
+    rhs: Condition,
+    conn: Connector = Connector.none
+  ) {
+    this.lhs = lhs;
+    this.rhs = rhs;
+    this.connector = conn;
+  }
+
+  validation(): String {
+    return (
+      "(" + this.lhs.validation() + this.connector + this.rhs.validation() + ")"
+    );
+  }
+}
+
+class ValueCondition implements Condition {
+  input: Value;
+  required_value: Value;
+
+  constructor(input: Value, required_value: Value) {
     this.input = input;
     this.required_value = required_value;
   }
 
   validation() {
-    return this.input.val() + "==" + this.required_value;
+    return "(" + this.input.val() + "==" + this.required_value.val() + ")";
   }
 }
 
 class VisibleCondition implements Condition {
-  input: Input;
+  input: Visibility;
   required_visibility: Visibility;
 
-  constructor(input: Input, required_visibility: Visibility) {
+  constructor(input: Visibility, required_visibility: Visibility) {
     this.input = input;
     this.required_visibility = required_visibility;
   }
 
   validation() {
     return (
-      this.input.visibility() + "==" + this.required_visibility.visibility()
+      "(" +
+      this.input.visibility() +
+      "==" +
+      this.required_visibility.visibility() +
+      ")"
     );
   }
 }
