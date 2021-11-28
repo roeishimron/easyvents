@@ -108,23 +108,38 @@ enum Connector {
 class ConnectedCondition implements Condition {
   connector: Connector;
   lhs: Condition;
-  rhs: Condition;
 
   constructor(
     lhs: Condition,
-    rhs: Condition,
     conn: Connector = Connector.none
   ) {
     this.lhs = lhs;
-    this.rhs = rhs;
     this.connector = conn;
   }
 
   validation(): String {
     return (
-      "(" + this.lhs.validation() + this.connector + this.rhs.validation() + ")"
+      this.lhs.validation() + this.connector 
     );
   }
+}
+
+class ConnectedConditions implements Condition{
+ current_conditions : Array<ConnectedCondition> = new Array<ConnectedCondition>();
+
+ validation(): String{
+   var res = "";
+   this.current_conditions.forEach(c => {
+     res += c.validation();
+   });
+
+   return res;
+ }
+
+ add_condition(c: ConnectedCondition){
+   this.current_conditions.push(c);
+ }
+
 }
 
 class ValueCondition implements Condition {
