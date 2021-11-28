@@ -1,15 +1,25 @@
+function trigger_handler() {
+  let name_to_type = {
+    click: "click",
+    change: "change",
+    ready: "ready",
+  };
 
-function trigger_choose_handler(input: Input) {
-    let name_to_type = {
-      click: TriggerType.click,
-      change: TriggerType.change,
-    };
-  
-    trigger = new Trigger(
-      input,
-      prompt_dict("What kind of trigger?", name_to_type)
-    );
-  
-    condition_handler();
+  let chosen_trigger = prompt_dict(
+    "What kind of trigger? (ready = once the form is ready)",
+    name_to_type
+  );
+
+  if (chosen_trigger == "ready") {
+    setTimeout(() => {
+      trigger = new DocumentReadyTrigger();
+      condition_handler();
+    }, 1);
+    return;
   }
-  
+
+  choose_input("input trigger", (i: Input) => {
+    trigger = new InputTrigger(i, chosen_trigger);
+    condition_handler();
+  });
+}

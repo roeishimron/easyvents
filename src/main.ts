@@ -6,8 +6,8 @@ var is_choosing = false;
 var handler: Function;
 
 function flow() {
-  console.log("#we started");
-  choose_input("trigger", trigger_choose_handler);
+ console.log("#we started");
+ trigger_handler();
 }
 
 function finish() {

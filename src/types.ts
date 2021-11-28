@@ -81,24 +81,27 @@ enum TriggerType {
   change,
 }
 
-class Trigger {
-  input: Input;
-  trigger: TriggerType;
+interface Trigger {
+  create_handeled_trigger(handler: String): String;
+}
 
-  constructor(input: Input, trigger: TriggerType) {
+class DocumentReadyTrigger implements Trigger {
+  create_handeled_trigger(handler: String): String {
+    return "$(document).ready(" + handler + ")";
+  }
+}
+
+class InputTrigger implements Trigger {
+  input: Input;
+  trigger: String;
+
+  constructor(input: Input, trigger: String) {
     this.input = input;
     this.trigger = trigger;
   }
 
   create_handeled_trigger(handler: String) {
-    return (
-      this.input.as_jquery() +
-      "." +
-      TriggerType[this.trigger] +
-      "(" +
-      handler +
-      ")"
-    );
+    return this.input.as_jquery() + "." + this.trigger + "(" + handler + ")";
   }
 }
 
@@ -216,16 +219,16 @@ class SetVisibilityAction implements Action {
   }
 }
 
-class Actions implements Action{
+class Actions implements Action {
   actions: Array<Action> = new Array<Action>();
 
-  add_action(a: Action){
+  add_action(a: Action) {
     this.actions.push(a);
   }
 
-  get_action(){
+  get_action() {
     var res = "";
-    this.actions.forEach(a => {
+    this.actions.forEach((a) => {
       res += a.get_action() + ";\n";
     });
     return res;
