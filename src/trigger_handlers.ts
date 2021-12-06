@@ -1,13 +1,11 @@
 function trigger_handler() {
-  let name_to_type = {
-    click: "click",
-    change: "change",
-    ready: "ready",
-  };
-
   let chosen_trigger = prompt_dict(
     "What kind of trigger? (ready = once the form is ready)",
-    name_to_type
+    {
+      click: "click",
+      change: "change",
+      ready: "ready",
+    }
   );
 
   if (chosen_trigger == "ready") {
